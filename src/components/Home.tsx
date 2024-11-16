@@ -3,7 +3,14 @@ import { fetchMessages } from "./Fetch";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 import { Mail, FileText, Bell, ExternalLink } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -56,6 +63,19 @@ const MessageList: React.FC<{ token: string }> = ({ token }) => {
     return <div>Error: {error}</div>;
   }
 
+  // Filter Surat Masuk dan Keluar
+  const incomingMessages = messages.filter(
+    (message) => message.incoming_or_outgoing === "INCOMING"
+  );
+  const outgoingMessages = messages.filter(
+    (message) => message.incoming_or_outgoing === "OUTGOING"
+  );
+
+  // Hitung statistik
+  const totalIncoming = incomingMessages.length;
+  const totalOutgoing = outgoingMessages.length;
+  const totalDocuments = messages.length;
+
   return (
     <div className="flex bg-gray-50 min-h-screen">
       <SideBar />
@@ -80,41 +100,56 @@ const MessageList: React.FC<{ token: string }> = ({ token }) => {
           </div>
         </div>
 
+        {/* Statistik */}
         <div className="grid grid-cols-3 gap-6 mb-8">
-          <StatsCard icon={Mail} label="TOTAL SURAT MASUK" value="4" />
-          <StatsCard icon={Mail} label="TOTAL SURAT KELUAR" value="1" />
-          <StatsCard icon={FileText} label="TOTAL DOKUMEN" value="5" />
+          <StatsCard
+            icon={Mail}
+            label="TOTAL SURAT MASUK"
+            value={totalIncoming}
+          />
+          <StatsCard
+            icon={Mail}
+            label="TOTAL SURAT KELUAR"
+            value={totalOutgoing}
+          />
+          <StatsCard
+            icon={FileText}
+            label="TOTAL DOKUMEN"
+            value={totalDocuments}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-8">
+          {/* Tabel Surat Masuk */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg font-medium">Surat Masuk Hari Ini</CardTitle>
-              <Link to="/pesan">
+              <CardTitle className="text-lg font-medium">Surat Masuk</CardTitle>
+              <Link to="/pesan?status=INCOMING">
                 <Button variant="ghost" size="sm">
                   Lihat Semua
                   <ExternalLink className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              {error && <p style={{ color: "red" }}>{error}</p>}
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[100px]">Konten</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Asal Surat</TableHead>
                     <TableHead>Tanggal/Waktu</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {messages.map((message) => (
+                  {incomingMessages.map((message) => (
                     <TableRow key={message.mail_code}>
-                      <TableCell className="font-medium">{message.content}</TableCell>
-                      <TableCell>{message.incoming_or_outgoing}</TableCell>
+                      <TableCell className="font-medium">
+                        {message.content}
+                      </TableCell>
                       <TableCell>{message.to_or_from}</TableCell>
-                      <TableCell>{new Date(message.date).toLocaleString()}</TableCell>
+                      <TableCell>
+                        {new Date(message.date).toLocaleString()}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -122,13 +157,19 @@ const MessageList: React.FC<{ token: string }> = ({ token }) => {
             </CardContent>
           </Card>
 
+          {/* Tabel Surat Keluar */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg font-medium">Tulis Pesan</CardTitle>
-              <Button variant="ghost" size="sm">
-                Kirim Pesan
-                <ExternalLink className="ml-2 h-4 w-4" />
-              </Button>
+              <CardTitle className="text-lg font-medium">
+                Surat Keluar
+              </CardTitle>
+
+              <Link to="/pesan?status=OUTGOING">
+                <Button variant="ghost" size="sm">
+                  Lihat Semua
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </CardHeader>
             <CardContent>
               <Table>
@@ -137,15 +178,20 @@ const MessageList: React.FC<{ token: string }> = ({ token }) => {
                     <TableHead className="w-12">No</TableHead>
                     <TableHead>Penerima</TableHead>
                     <TableHead>Tanggal</TableHead>
-                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell>1</TableCell>
-                    <TableCell className="font-medium">Acme Corp</TableCell>
-                    <TableCell>01/10/2023</TableCell>
-                  </TableRow>
+                  {outgoingMessages.map((message, index) => (
+                    <TableRow key={message.mail_code}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell className="font-medium">
+                        {message.to_or_from}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(message.date).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>
